@@ -6,3 +6,4 @@
 .app_frozen/
 freezepop.py
 .bin
+*.csv
