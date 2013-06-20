@@ -19,10 +19,14 @@ import sys
 
 try:
     assert(len(sys.argv[1:]))
+    sys.stderr.write("Input files: " + ', '.join(sys.argv[1:]) + '\n')
 except AssertionError:
     print("ERROR: List input .csv files on the command line.")
     sys.exit()
 
+
+COL_MAX = 12  # We ignore the last 12 columns on the 384-well plate.
+ROW_MAX = 16
 
 # Store plate data
 stored_plates = {}
@@ -31,22 +35,22 @@ for (plate_number, filename) in enumerate(sys.argv[1:]):
     with open(filename, 'U') as csvfile:
         reader = csv.reader(csvfile)
         for (row_number, row) in enumerate(reader):
+            assert(len(row) == 26)  # Plate reader produces header, data (x24), empty last column
             if row[0] == '':
                 # We must be on the header row
-                assert(len(row) == 26)
                 stored_plates[plate_number] = {}
             else:
                 stored_plates[plate_number][row_number] = row[1:]
+        assert(len(stored_plates[0]) == ROW_MAX)
 
 
-COL_MAX = 12  # We ignore the last 12 columns on the 384-well plate.
-ROW_MAX = 16
 PLATE_MAX = len(stored_plates)
 
 # Loop over
 for row in range(1, ROW_MAX + 1)[::2]:
     for col in range(0, COL_MAX):
-        print(string.uppercase[row//2] + str(col + 1)),
+        sys.stdout.write(string.uppercase[row//2] + str(col + 1) + ',')
         for plate in range(PLATE_MAX - 1):
-            print(stored_plates[plate][row][col]),
+            sys.stdout.write(stored_plates[plate][row][col] + ',')
         print ""
+
