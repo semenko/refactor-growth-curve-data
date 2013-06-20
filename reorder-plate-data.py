@@ -35,12 +35,15 @@ for (plate_number, filename) in enumerate(sys.argv[1:]):
     with open(filename, 'U') as csvfile:
         reader = csv.reader(csvfile)
         for (row_number, row) in enumerate(reader):
-            assert(len(row) == 26)  # Plate reader produces header, data (x24), empty last column
-            if row[0] == '':
-                # We must be on the header row
-                stored_plates[plate_number] = {}
-            else:
-                stored_plates[plate_number][row_number] = row[1:]
+            try:
+                if row[0] == '':
+                    # We must be on the header row
+                    assert(len(row) == 25)  # Plate reader produces header, data (x24)
+                    stored_plates[plate_number] = {}
+                else:
+                    stored_plates[plate_number][row_number] = row[1:-1]  # Ignore the last column (usual just the OD)
+            except IndexError:
+                pass  # Last row, empty.
         assert(len(stored_plates[0]) == ROW_MAX)
 
 
@@ -50,7 +53,6 @@ PLATE_MAX = len(stored_plates)
 for row in range(1, ROW_MAX + 1)[::2]:
     for col in range(0, COL_MAX):
         sys.stdout.write(string.uppercase[row//2] + str(col + 1) + ',')
-        for plate in range(PLATE_MAX - 1):
+        for plate in range(PLATE_MAX):
             sys.stdout.write(stored_plates[plate][row][col] + ',')
         print ""
-
